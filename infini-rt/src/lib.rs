@@ -1,12 +1,7 @@
 #![cfg(infini)]
 
 #[macro_use]
-#[allow(
-    non_camel_case_types,
-    non_snake_case,
-    non_upper_case_globals,
-    clippy::approx_constant
-)]
+#[allow(non_camel_case_types)]
 pub mod bindings {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
@@ -32,4 +27,24 @@ pub fn init(dev: DeviceType) {
 #[test]
 fn test_init() {
     init(DEVICE_CPU)
+}
+
+mod device;
+mod event;
+mod memory;
+mod stream;
+
+pub use device::Device;
+pub use event::Event;
+pub use memory::{DevBlob, DevByte};
+pub use stream::Stream;
+
+/// 资源的原始形式的表示。通常来自底层库的定义。
+pub trait AsRaw {
+    /// 原始形式的类型。
+    type Raw: Unpin + 'static;
+    /// # Safety
+    ///
+    /// The caller must ensure that the returned item is dropped before the original item.
+    unsafe fn as_raw(&self) -> Self::Raw;
 }
