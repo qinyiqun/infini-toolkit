@@ -1,0 +1,3 @@
+[workspace]
+members = ["infini-rt", "search-infini-tools"]
+resolver = "2"
