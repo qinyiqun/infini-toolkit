@@ -36,7 +36,7 @@ mod stream;
 
 pub use device::Device;
 pub use event::Event;
-pub use memory::{DevBlob, DevByte};
+pub use memory::{DevBlob, DevByte, HostBlob};
 pub use stream::Stream;
 
 /// 资源的原始形式的表示。通常来自底层库的定义。

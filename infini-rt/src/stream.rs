@@ -35,6 +35,14 @@ impl Stream {
         infini!(infinirtStreamSynchronize(self.0))
     }
 
+    #[inline]
+    pub fn get_device(&self) -> Device {
+        let mut ty = crate::DeviceType::DEVICE_CPU;
+        let mut id = 0;
+        infini!(infinirtGetStreamDeviceInfo(&mut ty, &mut id, self.0));
+        Device { ty, id }
+    }
+
     /// 获取相对 infinirt 更底层的流对象指针。
     ///
     /// # Safety
