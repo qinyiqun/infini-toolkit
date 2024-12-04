@@ -1,37 +1,15 @@
 ﻿fn main() {
     use build_script_cfg::Cfg;
-    use search_infini_tools::{extra_config, find_infer_cc, get_or_set_infini_root};
-    use std::process::Command;
+    use search_infini_tools::find_infini_rt;
     use std::{env, path::PathBuf};
 
     let cfg = Cfg::new("infini");
-    let Some(src) = find_infer_cc() else {
+    let Some(root) = find_infini_rt() else {
         return;
     };
 
-    let lib = get_or_set_infini_root().join("lib");
-    let extra_config = extra_config();
-
-    if !lib.read_dir().map_or(false, |dir| {
-        dir.filter_map(|entry| entry.ok())
-            .filter_map(|entry| entry.file_name().into_string().ok())
-            .any(|name| name.contains("infinirt"))
-    }) {
-        let xmake = || {
-            let mut cmd = Command::new("xmake");
-            cmd.current_dir(&src);
-            cmd
-        };
-
-        let mut config = xmake();
-        config.args(["f", "--ccl=false", "--infer=false"]);
-        if !extra_config.is_empty() {
-            config.arg(extra_config);
-        }
-        assert!(config.status().unwrap().success());
-        assert!(xmake().status().unwrap().success());
-        assert!(xmake().arg("install").status().unwrap().success());
-    }
+    let include = root.join("include");
+    let lib = root.join("lib");
 
     cfg.define();
     println!("cargo:rustc-link-search={}", lib.display());
@@ -43,7 +21,7 @@
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate bindings for.
         .header("wrapper.h")
-        .clang_arg(format!("-I{}", src.join("include").display()))
+        .clang_arg(format!("-I{}", include.display()))
         // Only generate bindings for the functions in these namespaces.
         .allowlist_item("infinirt.*")
         .allowlist_item("DeviceType")

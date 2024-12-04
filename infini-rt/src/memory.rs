@@ -13,19 +13,19 @@ pub struct DevByte(u8);
 
 impl Device {
     #[inline]
-    pub fn memcpy(&self, dst: &mut [DevByte], src: &[DevByte]) {
+    pub fn memcpy_d2d(&self, dst: &mut [DevByte], src: &[DevByte]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         infini!(infinirtMemcpy(dst, src, self.ty, self.id, len,))
     }
 
     #[inline]
-    pub fn memcpyh2d<T: Copy>(&self, dst: &mut [DevByte], src: &[T]) {
+    pub fn memcpy_h2d<T: Copy>(&self, dst: &mut [DevByte], src: &[T]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         infini!(infinirtMemcpyH2D(dst, self.ty, self.id, src, len,))
     }
 
     #[inline]
-    pub fn memcpyd2h<T: Copy>(&self, dst: &mut [T], src: &[DevByte]) {
+    pub fn memcpy_d2h<T: Copy>(&self, dst: &mut [T], src: &[DevByte]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         infini!(infinirtMemcpyD2H(dst, src, self.ty, self.id, len))
     }
@@ -33,14 +33,14 @@ impl Device {
 
 impl Stream {
     #[inline]
-    pub fn memcpy(&self, dst: &mut [DevByte], src: &[DevByte]) {
+    pub fn memcpy_d2d(&self, dst: &mut [DevByte], src: &[DevByte]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         let Device { ty, id } = self.get_device();
         infini!(infinirtMemcpyAsync(dst, src, ty, id, len, self.as_raw()))
     }
 
     #[inline]
-    pub fn memcpyh2d<T: Copy>(&self, dst: &mut [DevByte], src: &[T]) {
+    pub fn memcpy_h2d<T: Copy>(&self, dst: &mut [DevByte], src: &[T]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         let Device { ty, id } = self.get_device();
         infini!(infinirtMemcpyH2DAsync(dst, ty, id, src, len, self.as_raw()))

@@ -1,9 +1,8 @@
-﻿use std::ptr::null_mut;
-
-use crate::{
+﻿use crate::{
     bindings::{infinirtEventQuery, infinirtEvent_t, infinirtStatus_t as Status},
     AsRaw, Device, Stream,
 };
+use std::ptr::null_mut;
 
 #[repr(transparent)]
 pub struct Event(infinirtEvent_t);
@@ -51,7 +50,7 @@ impl Event {
 
 impl Stream {
     #[inline]
-    pub fn record(&self, event: &Event) {
+    pub fn record(&self, event: &mut Event) {
         infini!(infinirtEventRecord(event.0, self.as_raw()))
     }
 
