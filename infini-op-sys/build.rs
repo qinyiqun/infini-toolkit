@@ -1,10 +1,10 @@
 ﻿fn main() {
     use build_script_cfg::Cfg;
-    use search_infini_tools::find_infini_rt;
+    use search_infini_tools::find_infini_op;
     use std::{env, path::PathBuf};
 
     let cfg = Cfg::new("infini");
-    let Some(root) = find_infini_rt() else {
+    let Some(root) = find_infini_op() else {
         return;
     };
 
@@ -13,7 +13,7 @@
 
     cfg.define();
     println!("cargo:rustc-link-search={}", lib.display());
-    println!("cargo:rustc-link-lib=infinirt");
+    println!("cargo:rustc-link-lib=infiniop");
     if !cfg!(windows) {
         println!("cargo::rustc-link-arg=-Wl,-rpath,{}", lib.display());
     }
