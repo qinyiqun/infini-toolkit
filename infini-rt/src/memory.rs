@@ -15,19 +15,19 @@ impl Device {
     #[inline]
     pub fn memcpy_d2d(&self, dst: &mut [DevByte], src: &[DevByte]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
-        infini!(infinirtMemcpy(dst, src, self.ty, self.id, len,))
+        infinirt!(infinirtMemcpy(dst, src, self.ty, self.id, len,))
     }
 
     #[inline]
     pub fn memcpy_h2d<T: Copy>(&self, dst: &mut [DevByte], src: &[T]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
-        infini!(infinirtMemcpyH2D(dst, self.ty, self.id, src, len,))
+        infinirt!(infinirtMemcpyH2D(dst, self.ty, self.id, src, len,))
     }
 
     #[inline]
     pub fn memcpy_d2h<T: Copy>(&self, dst: &mut [T], src: &[DevByte]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
-        infini!(infinirtMemcpyD2H(dst, src, self.ty, self.id, len))
+        infinirt!(infinirtMemcpyD2H(dst, src, self.ty, self.id, len))
     }
 }
 
@@ -36,14 +36,14 @@ impl Stream {
     pub fn memcpy_d2d(&self, dst: &mut [DevByte], src: &[DevByte]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         let Device { ty, id } = self.get_device();
-        infini!(infinirtMemcpyAsync(dst, src, ty, id, len, self.as_raw()))
+        infinirt!(infinirtMemcpyAsync(dst, src, ty, id, len, self.as_raw()))
     }
 
     #[inline]
     pub fn memcpy_h2d<T: Copy>(&self, dst: &mut [DevByte], src: &[T]) {
         let (dst, src, len) = memcpy_ptr(dst, src);
         let Device { ty, id } = self.get_device();
-        infini!(infinirtMemcpyH2DAsync(dst, ty, id, src, len, self.as_raw()))
+        infinirt!(infinirtMemcpyH2DAsync(dst, ty, id, src, len, self.as_raw()))
     }
 }
 
@@ -66,7 +66,7 @@ impl Device {
         let len = layout.size();
 
         let mut ptr = null_mut();
-        infini!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
+        infinirt!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
 
         DevBlob {
             dev: *self,
@@ -80,8 +80,8 @@ impl Device {
         let len = size_of_val(data);
 
         let mut ptr = null_mut();
-        infini!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
-        infini!(infinirtMemcpyH2D(ptr, self.ty, self.id, src, len));
+        infinirt!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
+        infinirt!(infinirtMemcpyH2D(ptr, self.ty, self.id, src, len));
 
         DevBlob {
             dev: *self,
@@ -99,7 +99,7 @@ impl Stream {
         let dev = self.get_device();
         let raw = unsafe { self.as_raw() };
         let mut ptr = null_mut();
-        infini!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
+        infinirt!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
 
         let ptr = NonNull::new(ptr).unwrap().cast();
         DevBlob { dev, ptr, len }
@@ -112,8 +112,8 @@ impl Stream {
         let dev = self.get_device();
         let raw = unsafe { self.as_raw() };
         let mut ptr = null_mut();
-        infini!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
-        infini!(infinirtMemcpyH2DAsync(ptr, dev.ty, dev.id, src, len, raw));
+        infinirt!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
+        infinirt!(infinirtMemcpyH2DAsync(ptr, dev.ty, dev.id, src, len, raw));
 
         let ptr = NonNull::new(ptr).unwrap().cast();
         DevBlob { dev, ptr, len }
@@ -123,7 +123,7 @@ impl Stream {
         let &DevBlob { dev, ptr, .. } = &blob;
         forget(blob);
 
-        infini!(infinirtFreeAsync(
+        infinirt!(infinirtFreeAsync(
             ptr.as_ptr().cast(),
             dev.ty,
             dev.id,
@@ -134,7 +134,7 @@ impl Stream {
 
 impl Drop for DevBlob {
     fn drop(&mut self) {
-        infini!(infinirtFree(
+        infinirt!(infinirtFree(
             self.ptr.as_ptr().cast(),
             self.dev.ty,
             self.dev.id
@@ -190,7 +190,7 @@ impl Device {
         let len = layout.size();
 
         let mut ptr = null_mut();
-        infini!(infinirtMallocHost(&mut ptr, self.ty, self.id, len));
+        infinirt!(infinirtMallocHost(&mut ptr, self.ty, self.id, len));
 
         HostBlob {
             dev: *self,
@@ -202,7 +202,7 @@ impl Device {
 
 impl Drop for HostBlob {
     fn drop(&mut self) {
-        infini!(infinirtFreeHost(
+        infinirt!(infinirtFreeHost(
             self.ptr.as_ptr().cast(),
             self.dev.ty,
             self.dev.id,

@@ -25,7 +25,7 @@
         .header("wrapper.h")
         .clang_arg(format!("-I{}", include.display()))
         // Only generate bindings for the functions in these namespaces.
-        .allowlist_item("infinirt.*")
+        .allowlist_item("infiniop.*")
         .allowlist_item("DeviceType")
         // Annotate the given type with the #[must_use] attribute.
         // Nothing...

@@ -10,7 +10,7 @@ pub struct Event(infinirtEvent_t);
 impl Device {
     pub fn event(&self) -> Event {
         let mut event = null_mut();
-        infini!(infinirtEventCreate(&mut event, self.ty, self.id));
+        infinirt!(infinirtEventCreate(&mut event, self.ty, self.id));
         Event(event)
     }
 }
@@ -20,7 +20,7 @@ unsafe impl Sync for Event {}
 
 impl Drop for Event {
     fn drop(&mut self) {
-        infini!(infinirtEventDestroy(self.0))
+        infinirt!(infinirtEventDestroy(self.0))
     }
 }
 
@@ -35,7 +35,7 @@ impl AsRaw for Event {
 impl Event {
     #[inline]
     pub fn synchronize(&self) {
-        infini!(infinirtEventSynchronize(self.0))
+        infinirt!(infinirtEventSynchronize(self.0))
     }
 
     #[inline]
@@ -51,11 +51,11 @@ impl Event {
 impl Stream {
     #[inline]
     pub fn record(&self, event: &mut Event) {
-        infini!(infinirtEventRecord(event.0, self.as_raw()))
+        infinirt!(infinirtEventRecord(event.0, self.as_raw()))
     }
 
     #[inline]
     pub fn wait(&self, event: &Event) {
-        infini!(infinirtStreamWaitEvent(event.0, self.as_raw()))
+        infinirt!(infinirtStreamWaitEvent(event.0, self.as_raw()))
     }
 }

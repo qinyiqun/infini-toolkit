@@ -9,6 +9,6 @@ pub struct Device {
 impl Device {
     #[inline]
     pub fn synchronize(&self) {
-        infini!(infinirtDeviceSynchronize(self.ty, self.id))
+        infinirt!(infinirtDeviceSynchronize(self.ty, self.id))
     }
 }
