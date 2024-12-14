@@ -28,8 +28,10 @@ pub trait AsRaw {
 }
 
 mod data_layout;
+mod descriptor;
 mod handle;
 mod tensor;
 
+pub use descriptor::Descriptor;
 pub use handle::Handle;
 pub use tensor::Tensor;

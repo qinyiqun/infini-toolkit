@@ -6,7 +6,14 @@ use std::ptr::null_mut;
 pub struct Tensor(infiniopTensorDescriptor_t);
 
 impl Tensor {
-    pub fn new(dt: DigitLayout, shape: &[u64], strides: &[i64]) -> Self {
+    pub fn new(
+        dt: DigitLayout,
+        shape: impl IntoIterator<Item = usize>,
+        strides: impl IntoIterator<Item = isize>,
+    ) -> Self {
+        let ele = dt.nbytes() as isize;
+        let shape: Vec<_> = shape.into_iter().map(|x| x as _).collect();
+        let strides: Vec<_> = strides.into_iter().map(|x| (x / ele) as _).collect();
         let ndim = shape.len();
         assert_eq!(strides.len(), ndim);
 
