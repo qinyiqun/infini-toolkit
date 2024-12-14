@@ -31,3 +31,25 @@ impl AsRaw for Handle {
         self.0
     }
 }
+
+#[test]
+fn test_init() {
+    use crate::bindings::{
+        infiniopCreateHandle,
+        infiniopStatus_t::{STATUS_BAD_DEVICE, STATUS_SUCCESS},
+    };
+    let init = [
+        Device::DevCpu,
+        Device::DevNvGpu,
+        Device::DevCambriconMlu,
+        Device::DevAscendNpu,
+    ]
+    .map(|dev| {
+        let mut ptr = null_mut();
+        unsafe { infiniopCreateHandle(&mut ptr, dev, 0) }
+    });
+    assert!(init
+        .iter()
+        .all(|&status| matches!(status, STATUS_SUCCESS | STATUS_BAD_DEVICE)));
+    assert!(init.contains(&STATUS_SUCCESS));
+}
