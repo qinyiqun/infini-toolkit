@@ -65,12 +65,15 @@ impl Device {
         let layout = Layout::array::<T>(len).unwrap();
         let len = layout.size();
 
-        let mut ptr = null_mut();
-        infinirt!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
-
         DevBlob {
             dev: *self,
-            ptr: NonNull::new(ptr).unwrap().cast(),
+            ptr: if len == 0 {
+                NonNull::dangling()
+            } else {
+                let mut ptr = null_mut();
+                infinirt!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
+                NonNull::new(ptr).unwrap().cast()
+            },
             len,
         }
     }
@@ -79,13 +82,16 @@ impl Device {
         let src = data.as_ptr().cast();
         let len = size_of_val(data);
 
-        let mut ptr = null_mut();
-        infinirt!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
-        infinirt!(infinirtMemcpyH2D(ptr, self.ty, self.id, src, len));
-
         DevBlob {
             dev: *self,
-            ptr: NonNull::new(ptr).unwrap().cast(),
+            ptr: if len == 0 {
+                NonNull::dangling()
+            } else {
+                let mut ptr = null_mut();
+                infinirt!(infinirtMalloc(&mut ptr, self.ty, self.id, len));
+                infinirt!(infinirtMemcpyH2D(ptr, self.ty, self.id, src, len));
+                NonNull::new(ptr).unwrap().cast()
+            },
             len,
         }
     }
@@ -97,12 +103,18 @@ impl Stream {
         let len = layout.size();
 
         let dev = self.get_device();
-        let raw = unsafe { self.as_raw() };
-        let mut ptr = null_mut();
-        infinirt!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
-
-        let ptr = NonNull::new(ptr).unwrap().cast();
-        DevBlob { dev, ptr, len }
+        DevBlob {
+            dev,
+            ptr: if len == 0 {
+                NonNull::dangling()
+            } else {
+                let raw = unsafe { self.as_raw() };
+                let mut ptr = null_mut();
+                infinirt!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
+                NonNull::new(ptr).unwrap().cast()
+            },
+            len,
+        }
     }
 
     pub fn from_host<T: Copy>(&self, data: &[T]) -> DevBlob {
@@ -110,16 +122,26 @@ impl Stream {
         let len = size_of_val(data);
 
         let dev = self.get_device();
-        let raw = unsafe { self.as_raw() };
-        let mut ptr = null_mut();
-        infinirt!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
-        infinirt!(infinirtMemcpyH2DAsync(ptr, dev.ty, dev.id, src, len, raw));
-
-        let ptr = NonNull::new(ptr).unwrap().cast();
-        DevBlob { dev, ptr, len }
+        DevBlob {
+            dev,
+            ptr: if len == 0 {
+                NonNull::dangling()
+            } else {
+                let raw = unsafe { self.as_raw() };
+                let mut ptr = null_mut();
+                infinirt!(infinirtMallocAsync(&mut ptr, dev.ty, dev.id, len, raw));
+                infinirt!(infinirtMemcpyH2DAsync(ptr, dev.ty, dev.id, src, len, raw));
+                NonNull::new(ptr).unwrap().cast()
+            },
+            len,
+        }
     }
 
     pub fn free(&self, blob: DevBlob) {
+        if blob.len == 0 {
+            return;
+        }
+
         let &DevBlob { dev, ptr, .. } = &blob;
         forget(blob);
 
@@ -134,6 +156,10 @@ impl Stream {
 
 impl Drop for DevBlob {
     fn drop(&mut self) {
+        if self.len == 0 {
+            return;
+        }
+
         infinirt!(infinirtFree(
             self.ptr.as_ptr().cast(),
             self.dev.ty,
@@ -157,11 +183,10 @@ impl Deref for DevBlob {
     type Target = [DevByte];
     #[inline]
     fn deref(&self) -> &Self::Target {
-        let len = self.len;
-        if len == 0 {
+        if self.len == 0 {
             &[]
         } else {
-            unsafe { from_raw_parts(self.ptr.as_ptr(), len) }
+            unsafe { from_raw_parts(self.ptr.as_ptr(), self.len) }
         }
     }
 }
@@ -169,11 +194,10 @@ impl Deref for DevBlob {
 impl DerefMut for DevBlob {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        let len = self.len;
-        if len == 0 {
+        if self.len == 0 {
             &mut []
         } else {
-            unsafe { from_raw_parts_mut(self.ptr.as_ptr(), len) }
+            unsafe { from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
         }
     }
 }
@@ -189,12 +213,15 @@ impl Device {
         let layout = Layout::array::<T>(len).unwrap();
         let len = layout.size();
 
-        let mut ptr = null_mut();
-        infinirt!(infinirtMallocHost(&mut ptr, self.ty, self.id, len));
-
         HostBlob {
             dev: *self,
-            ptr: NonNull::new(ptr).unwrap().cast(),
+            ptr: if len == 0 {
+                NonNull::dangling()
+            } else {
+                let mut ptr = null_mut();
+                infinirt!(infinirtMallocHost(&mut ptr, self.ty, self.id, len));
+                NonNull::new(ptr).unwrap().cast()
+            },
             len,
         }
     }
@@ -202,6 +229,10 @@ impl Device {
 
 impl Drop for HostBlob {
     fn drop(&mut self) {
+        if self.len == 0 {
+            return;
+        }
+
         infinirt!(infinirtFreeHost(
             self.ptr.as_ptr().cast(),
             self.dev.ty,
@@ -225,11 +256,10 @@ impl Deref for HostBlob {
     type Target = [u8];
     #[inline]
     fn deref(&self) -> &Self::Target {
-        let len = self.len;
-        if len == 0 {
+        if self.len == 0 {
             &[]
         } else {
-            unsafe { from_raw_parts(self.ptr.as_ptr(), len) }
+            unsafe { from_raw_parts(self.ptr.as_ptr(), self.len) }
         }
     }
 }
@@ -237,11 +267,10 @@ impl Deref for HostBlob {
 impl DerefMut for HostBlob {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        let len = self.len;
-        if len == 0 {
+        if self.len == 0 {
             &mut []
         } else {
-            unsafe { from_raw_parts_mut(self.ptr.as_ptr(), len) }
+            unsafe { from_raw_parts_mut(self.ptr.as_ptr(), self.len) }
         }
     }
 }
