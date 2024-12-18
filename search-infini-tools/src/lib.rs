@@ -13,6 +13,10 @@ pub fn find_infini_op() -> Option<PathBuf> {
     find_header_lib("infini_operators.h", "infiniop")
 }
 
+pub fn find_infini_ccl() -> Option<PathBuf> {
+    find_header_lib("infiniccl.h", "infiniccl")
+}
+
 fn find_header_lib(header: &str, lib: &str) -> Option<PathBuf> {
     const HOME: &str = if cfg!(windows) { "HOMEPATH" } else { "HOME" };
     let root = match find_env("INFINI_ROOT") {

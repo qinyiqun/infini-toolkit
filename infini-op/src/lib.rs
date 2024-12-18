@@ -1,4 +1,5 @@
 #![cfg(infini)]
+#![deny(warnings)]
 
 #[macro_use]
 #[allow(non_camel_case_types, clippy::useless_transmute)]
