@@ -43,6 +43,7 @@ fn test_init() {
         Device::DevNvGpu,
         Device::DevCambriconMlu,
         Device::DevAscendNpu,
+        Device::DevMetaxGpu,
     ]
     .map(|dev| {
         let mut ptr = null_mut();
